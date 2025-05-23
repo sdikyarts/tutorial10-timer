@@ -11,3 +11,8 @@ The println!("Yasmin's computer: hey hey"); is printed before the spawned async 
 ![Multiple Spawns](img/multiple_spawns.png)
 
 When we add multiple spawns in our code, each call to spawner.spawn(async { ... }) schedules a new asynchronous task to be run by the executor. These tasks are not executed immediately; instead, they are placed in a queue. After spawning all the tasks, we print "Yasmin's computer: hey hey" right away, because the main thread continues executing without waiting for the tasks to finish. Once the executor starts running, it begins polling each task in the order they were queued. Each task prints its "howdy!" message, waits for the timer to complete, and then prints its "done!" message. Since all timers are set for the same duration and run concurrently, the "howdy!" messages appear first, followed by the "done!" messages, which may finish in any order depending on how the executor schedules them. This demonstrates how our simple executor can handle multiple concurrent tasks, allowing them to progress independently.
+
+### Remove drop
+![Remove Drop](img/remove_drop.png)
+
+When we remove the drop(spawner); line, the executor never receives a signal that no more tasks will be spawned. The executor’s run method waits for new tasks from the channel, and without dropping the spawner, the sending side of the channel remains open. As a result, after all tasks have completed, the executor continues waiting for more tasks indefinitely, causing the program to hang and never exit on its own. In other words, the program does not terminate because the executor is still expecting possible new tasks, even though none will be sent.
